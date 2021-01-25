@@ -1560,6 +1560,42 @@ class Hash(K, V)
     end
   end
 
+
+  # Returns a new hash with all keys converted using mapping (from old key to new one) as a hash or a named tuple and the block. operation.
+  # The block can change a type of keys.
+  #
+  # ```
+  # hash = {:a => 1, :b => 2, :c => 3}
+  # hash.transform_keys({"a": "d", "e": "g"}) { |key| key.to_s } # => {"a" => 1, "b" => 2, "c" => 3}
+  # hash.transform_keys({"a" => "d", "e" => "g"}) { |key| key.to_s } # => {"a" => 1, "b" => 2, "c" => 3}
+  # ```
+  def transform_keys(mapping : Hash | NamedTuple, &block : K -> K2) forall K2
+    if mapping.is_a?(NamedTuple)
+      each_with_object({} of K2 => V) do |(key, value), memo|
+        if key.is_a?(Symbol) || key.is_a?(String)
+          memo[mapping.fetch(key, yield(key))] = value
+        else
+          memo[yield(key)] = value
+        end
+      end
+    else
+      each_with_object({} of K2 => V) do |(key, value), memo|
+        memo[mapping.fetch(key, yield(key))] = value
+      end
+    end
+  end
+
+  # Returns a new hash with all keys converted using mapping as optional named arugments and the block operation.
+  # The block can change a type of keys.
+  #
+  # ```
+  # hash = {:a => 1, :b => 2, :c => 3}
+  # hash.transform_keys("a": "d") { |key| key.to_s } # => {"d" => 1, "b" => 2, "c" => 3}
+  # ```
+  def transform_keys(**mapping, &block : K -> K2) forall K2
+    transform_keys(mapping, &block)
+  end
+
   # Returns a new hash with the results of running block once for every value.
   # The block can change a type of values.
   #

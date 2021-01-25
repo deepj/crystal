@@ -668,6 +668,47 @@ describe "Hash" do
     h2.empty?.should be_true
   end
 
+  it "transform keys with a mapping argument as a hash" do
+    mapping = {"givenRole" => "role", "statusOBS" => "status_obs", "unUsed" => "unused"}
+    h1 = {"firstName" => "Jane", "givenRole" => "admin", "statusOBS": "1", "disabled" => "false"}
+    h2 = h1.transform_keys(mapping) { |i| i.underscore }
+    h2.should be_a(Hash(String, String))
+    h2.should eq({"first_name" => "Jane", "role" => "admin", "status_obs" => "1", "disabled" => "false"})
+  end
+
+  it "transform keys with a mapping argument as a named tuple" do
+    mapping = {"givenRole": "role", "statusOBS": "status_obs", "unUsed": "unused" }
+    h1 = {"firstName" => "Jane", "givenRole" => "admin", "statusOBS": "1", "disabled" => "false"}
+    h2 = h1.transform_keys(mapping) { |i| i.underscore }
+    h2.should be_a(Hash(String, String))
+    h2.should eq({"first_name" => "Jane", "role" => "admin", "status_obs" => "1", "disabled" => "false"})
+  end
+
+  it "transform keys with a mapping argument as named arguments" do
+    h1 = {"firstName" => "Jane", "givenRole" => "admin", "statusOBS": "1", "disabled" => "false"}
+    h2 = h1.transform_keys("givenRole": "role", "statusOBS": "status_obs") { |i| i.underscore}
+    h2.should be_a(Hash(String, String))
+    h2.should eq({"first_name" => "Jane", "role" => "admin", "status_obs" => "1", "disabled" => "false"})
+  end
+
+
+  it "transform keys with a mapping argument and type casting" do
+    mapping = {a: "a", b: "b" , e: "e"}
+    h1 = {:a => 1, :b => 2, :c => 3}
+    h2 = h1.transform_keys(mapping) { |i| i.to_s }
+    h2.should be_a(Hash(String, Int32))
+    h2.should eq({"a" => 1, "b" => 2, "c" => 3})
+  end
+
+  it "returns empty hash when transforming keys of an empty hash with a mapping argument" do
+    mapping = {1 => 2, 2 => 3}
+    h1 = {} of Int32 => Symbol
+
+    h2 = h1.transform_keys(mapping) { |x| x + 1 }
+    h2.should be_a(Hash(Int32, Symbol))
+    h2.empty?.should be_true
+  end
+
   it "transforms values" do
     h1 = {:a => 1, :b => 2, :c => 3}
 
